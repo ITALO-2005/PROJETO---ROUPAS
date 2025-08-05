@@ -99,3 +99,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.app.github.dev',
     'https://*.githubpreview.dev'
 ]
+
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True

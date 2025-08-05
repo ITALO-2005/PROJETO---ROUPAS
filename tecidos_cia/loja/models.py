@@ -1,6 +1,8 @@
 # loja/models.py
 from django.db import models
 from django.contrib.auth.models import User
+from decimal import Decimal
+
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
@@ -41,10 +43,12 @@ class Pedido(models.Model):
 class ItemPedido(models.Model):
     tecido = models.ForeignKey(Tecido, on_delete=models.CASCADE)
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    quantidade_metros = models.FloatField(default=1)
+    # ALTERAÇÃO AQUI: Trocamos FloatField por DecimalField
+    quantidade_metros = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('1.00'))
     data_adicao = models.DateTimeField(auto_now_add=True)
 
     @property
     def get_total(self):
+        # A linha da multiplicação agora funciona perfeitamente
         total = self.tecido.preco_por_metro * self.quantidade_metros
         return total
