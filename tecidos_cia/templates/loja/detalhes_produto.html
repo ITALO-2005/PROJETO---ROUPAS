@@ -1,1 +1,58 @@
-# Conteúdo de templates/loja/detalhes_produto.html
+{% extends 'loja/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        {% if tecido.imagem %}
+            <img src="{{ tecido.imagem.url }}" class="img-fluid rounded" alt="{{ tecido.nome }}">
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <h2>{{ tecido.nome }}</h2>
+        <p class="text-muted">{{ tecido.categoria.nome }}</p>
+        <h3 class="my-3">R$ {{ tecido.preco_por_metro|floatformat:2 }} <span class="fs-6 text-muted">/ metro</span></h3>
+        <p>{{ tecido.descricao }}</p>
+
+        <div class="input-group mb-3" style="max-width: 200px;">
+             <span class="input-group-text">Metragem:</span>
+             <input type="number" id="metragem-input" class="form-control" value="1" min="0.5" step="0.1">
+        </div>
+        
+        <button data-produto="{{ tecido.id }}" class="btn btn-success btn-lg add-to-cart-btn">
+            Adicionar ao Carrinho
+        </button>
+        <div id="feedback-msg" class="mt-2 text-success"></div>
+    </div>
+</div>
+
+<script>
+document.querySelector('.add-to-cart-btn').addEventListener('click', function() {
+    const produtoId = this.dataset.produto;
+    const metragem = document.getElementById('metragem-input').value;
+    const feedback = document.getElementById('feedback-msg');
+
+    if ({{ user.is_authenticated|yesno:"true,false" }}) {
+        fetch("{% url 'adicionar_ao_carrinho' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({'produtoId': produtoId, 'metragem': metragem})
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            feedback.innerText = 'Produto adicionado com sucesso!';
+            setTimeout(() => { 
+                feedback.innerText = '';
+                location.reload(); // Recarrega a página para atualizar o contador do carrinho
+            }, 1500);
+        });
+    } else {
+        alert('Você precisa estar logado para adicionar itens ao carrinho.');
+        window.location.href = "{% url 'login' %}?next={{ request.path }}";
+    }
+});
+</script>
+{% endblock %}

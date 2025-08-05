@@ -1,1 +1,28 @@
-# Conteúdo de templates/loja/home.html
+{% extends 'loja/base.html' %}
+
+{% block content %}
+<div class="text-center bg-light p-5 rounded">
+    <h1>Bem-vindo à Tecidos & Cia!</h1>
+    <p class="lead">Qualidade e variedade em tecidos para todos os seus projetos.</p>
+</div>
+
+<h2 class="mt-5">Tecidos em Destaque</h2>
+<div class="row">
+    {% for tecido in tecidos_destaque %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if tecido.imagem %}
+                <img src="{{ tecido.imagem.url }}" class="card-img-top" alt="{{ tecido.nome }}" style="height: 250px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ tecido.nome }}</h5>
+                <p class="card-text">R$ {{ tecido.preco_por_metro }} / metro</p>
+                <a href="{% url 'detalhes_produto' tecido.id %}" class="btn btn-primary">Ver Detalhes</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>Nenhum tecido em destaque no momento.</p>
+    {% endfor %}
+</div>
+{% endblock %}

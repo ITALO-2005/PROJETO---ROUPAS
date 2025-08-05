@@ -1,1 +1,110 @@
-# Conteúdo de templates/loja/carrinho.html
+{% extends 'loja/base.html' %} 
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Seu Carrinho de Compras</h2>
+    
+    {% for item in itens_do_carrinho %}
+    <div class="card mb-3" id="item-{{item.id}}">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="card-title">{{ item.tecido.nome }}</h5>
+                <p class="card-text mb-0">
+                    Quantidade: {{ item.quantidade_metros }} metros <br>
+                    Preço Unitário: R$ {{ item.tecido.preco_por_metro|floatformat:2 }} <br>
+                    Subtotal: R$ {{ item.get_total|floatformat:2 }}
+                </p>
+            </div>
+            <button class="btn btn-outline-danger btn-sm remove-from-cart-btn" data-item="{{item.id}}">Remover</button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">
+        Seu carrinho está vazio. <a href="{% url 'catalogo' %}" class="alert-link">Continue comprando!</a>
+    </div>
+    {% endfor %}
+
+    {% if itens_do_carrinho %}
+    <hr>
+    <h3>Total do Pedido: R$ <span id="total-carrinho">{{ pedido.get_total_carrinho|floatformat:2 }}</span></h3>
+
+    <div class="mt-4 p-4 border rounded">
+        <h4>Finalizar Compra</h4>
+        <div class="form-group mb-3">
+            <label for="forma-pagamento" class="form-label">Escolha a forma de pagamento:</label>
+            <select class="form-select" id="forma-pagamento">
+                <option value="Pix">Pix</option>
+                <option value="Cartão de Crédito">Cartão de Crédito (a combinar)</option>
+                <option value="Boleto">Boleto (a combinar)</option>
+            </select>
+        </div>
+
+        <button id="btn-finalizar-whatsapp" class="btn btn-success btn-lg">
+            <i class="fab fa-whatsapp"></i> Finalizar Pedido no WhatsApp
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Lógica de Remoção do Item
+document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const itemId = this.dataset.item;
+
+        fetch("{% url 'remover_do_carrinho' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({'itemId': itemId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            // Simplesmente recarrega a página para atualizar o carrinho e o total
+            location.reload(); 
+        });
+    });
+});
+
+
+// Lógica do Checkout via WhatsApp
+const finalizarBtn = document.getElementById('btn-finalizar-whatsapp');
+if (finalizarBtn) {
+    finalizarBtn.addEventListener('click', function() {
+        // Número de telefone da loja (com código do país e DDD)
+        const numeroLoja = '5511912345678'; // <-- COLOQUE O NÚMERO DA LOJA AQUI
+
+        // Coletando informações do pedido
+        const nomeCliente = "{{ user.first_name|default:user.username }}"; // Pega o nome do usuário logado
+        const totalPedido = document.getElementById('total-carrinho').innerText;
+        const formaPagamento = document.getElementById('forma-pagamento').value;
+
+        // Montando a lista de produtos para a mensagem
+        let listaProdutos = "";
+        {% for item in itens_do_carrinho %}
+        listaProdutos += `\n- *{{ item.tecido.nome }}* ({{ item.quantidade_metros }}m) - Subtotal: R$ {{ item.get_total|floatformat:2 }}`;
+        {% endfor %}
+
+        // Montando a mensagem final
+        let mensagem = `Olá! 👋 Gostaria de finalizar meu pedido:\n`;
+        mensagem += `\n*Pedido Nº:* {{ pedido.id }}`;
+        mensagem += `\n*Cliente:* ${nomeCliente}`;
+        mensagem += `\n\n*Itens do Pedido:*${listaProdutos}\n`;
+        mensagem += `\n*TOTAL:* R$ ${totalPedido}`;
+        mensagem += `\n*Forma de Pagamento escolhida:* ${formaPagamento}`;
+        mensagem += `\n\nAguardando instruções para concluir o pagamento. Obrigado!`;
+        
+        // Codificando a mensagem para URL
+        const mensagemCodificada = encodeURIComponent(mensagem);
+
+        // Criando o link do WhatsApp e redirecionando
+        const linkWhatsApp = `https://wa.me/${numeroLoja}?text=${mensagemCodificada}`;
+        
+        window.open(linkWhatsApp, '_blank');
+    });
+}
+</script>
+{% endblock %}

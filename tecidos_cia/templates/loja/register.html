@@ -1,0 +1,31 @@
+{% extends 'loja/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2>Crie sua Conta</h2>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {{ form.as_p }}
+
+                    <button type="submit" class="btn btn-primary mt-3">Cadastrar</button>
+                </form>
+                <p class="mt-3">
+                    Já tem uma conta? <a href="{% url 'login' %}">Faça o login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
